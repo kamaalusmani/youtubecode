@@ -1,0 +1,31 @@
+//Make sure your Salesforce instance URL is added in remote site settings
+String sfdcURL = URL.getSalesforceBaseUrl().toExternalForm();  
+String restAPIURL = sfdcURL + '/services/data/v51.0/ui-api/list-info/Opportunity/Test_List_View';
+  
+HttpRequest httpRequest = new HttpRequest();  
+httpRequest.setMethod('GET');   
+httpRequest.setHeader('Authorization', 'OAuth ' + UserInfo.getSessionId());        
+httpRequest.setHeader('Authorization', 'Bearer ' + UserInfo.getSessionID()); 
+httpRequest.setEndpoint(restAPIURL);  
+String response = '';
+String fields='';
+try {  
+		 Http http = new Http();   
+		 HttpResponse httpResponse = http.send(httpRequest);  
+		 if (httpResponse.getStatusCode() == 200 ) {  
+			   response = JSON.serializePretty(JSON.deserializeUntyped(httpResponse.getBody()));  
+				listViewParse jsonApex = listViewParse.parse(response);
+				for(listViewParse.cls_displayColumns col : jsonApex.displayColumns){
+					fields=fields + col.fieldApiName +',';
+               	 	System.debug('fields details'+fields);
+				}   
+				fields = fields.removeEnd(',');
+			  System.debug('final field list '+fields);
+		 } else {  
+			   System.debug(' httpResponse ' + httpResponse.getBody() );  
+			   throw new CalloutException( httpResponse.getBody() );  
+		 }   
+} catch( System.Exception e) {  
+		 System.debug('ERROR: '+ e);  
+		 throw e;  
+}  
